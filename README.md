@@ -14,7 +14,7 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 
 ### users テーブル
 
-| user_id | INT | PK, AUTO_INCREMENT | ユーザーID（主キー）  
+| user_id | INT | PK, AUTO_INCREMENT | ユーザーID  
 | username | VARCHAR(50) | NOT NULL, UNIQUE | ユーザー名  
 | created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | ユーザー登録時の日時 
 
@@ -53,5 +53,5 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 | fish_creater | VARCHAR(100) | NOT NULL, UNIQUE | 製作者名  
 | fish_texture_name | VARCHAR(100) | NOT NULL, UNIQUE | テクスチャ名  
 
-・fish_id が主キー
+・fish_id が主キー  
 ・fish_id は AUTO_INCREMENT で自動で連番が振られていく  
