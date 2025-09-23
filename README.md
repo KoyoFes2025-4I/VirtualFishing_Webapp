@@ -55,3 +55,7 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 
 ・fish_id が主キー  
 ・fish_id は AUTO_INCREMENT で自動で連番が振られていく  
+
+```
+mysql -u root -p virtualfishing < virtualfishing.sql // データベースの復元
+```
