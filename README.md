@@ -29,16 +29,16 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 | score | INT | NOT NULL | プレイのスコア  
 | played_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | プレイ日時  
 
-・play_id が主キー
+・play_id が主キー  
 ・play_id は users(user_id) を参照する外部キー  
 ・play_id は AUTO_INCREMENT で自動で連番が振られていく  
 
-### played_fished テーブル
+### played_fishes テーブル
 
 | play_fish_id | INT | PK, AUTO_INCREMENT | プレイアイテムID  
 | play_id | INT | NOT NULL, FK → plays(play_id) | どのプレイか  
 | fish_id | INT | NOT NULL, FK → fishlists(fish_id) | どの魚か  
-| quantity | INT | DEFAULT 1 | 釣れた引数  
+| quantity | INT | DEFAULT 1 | 釣れた匹数  
 
 ・play_fish_id が主キー  
 ・play_fish_id は AUTO_INCREMENT で自動で連番が振られていく  
