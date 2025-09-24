@@ -52,9 +52,10 @@ class Fishlists(db.Model):
     __tablename__ = 'fishlists'
 
     id = db.Column(db.Integer, primary_key=True) # fish_id
+    fish_name = db.Column(db.String(100), nullable=False, unique=True) # fish_name
 
 # 新規ユーザーをusersテーブルに追加する
-# 'name'の値をJSONで受け取る（POSTメソッド）
+# 'name'の値をJSONで受け取る
 @app.route("/Add", methods=['POST'])
 def add_user():
     data = request.get_json()
@@ -82,6 +83,70 @@ def load_user():
         # 成功したらJSONでそのリストをレスポンスする
         return jsonify({"usernames": usernames})
     except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+    
+# ゲーム終了時にスコアなどのデータをデータベースに記録する
+# どのユーザーが、何回目のプレイで、スコアがいくつで、どの魚を何匹釣れたかのデータをJSONで受け取る
+@app.route("/RecordResult", methods=['POST'])
+def Record_result():
+    data = request.get_json()  # JSONを取得
+
+    # 必須フィールドの有無をチェック
+    required_fields = ["name", "play_number", "score", "fish"]
+    missing = [f for f in required_fields if f not in data]
+    if missing:
+        return jsonify(success=False, error=f"Missing fields: {missing}"), 400
+
+    # JSONの値を取り出す
+    user_name = data["name"] # どのユーザーが
+    play_number = data["play_number"] # 何回目のプレイで
+    score = data["score"] # スコアがいくつで
+    fish_data = data["fish"] # 釣れた魚のリスト
+
+    fishnames = [] # 全ての魚オブジェクトの名前のリスト
+    fish_occurrences = [] # 各魚のそのプレイでの出現回数のリスト（fishnamesと順序同じ）
+    
+    try:
+        # Fishlistsテーブルからfish_name → fish_idの辞書リストを作っておく
+        fish_dict = {f.fish_name: f.fish_id for f in Fishlists.query.all()}
+
+        # # fishlistsテーブルの全fish_nameを取得してfishnamesに入れる
+        fishnames = list(fish_dict.keys())
+
+        # fish_dataの中に各魚が何回出現していたのかをfish_occurrencesにリスト化（0匹も含む）
+        fish_occurrences = [fish_data.count(fish) for fish in fishnames]
+
+        # ユーザーIDを取得（user_nameに対応するidを取得）
+        user = User.query.filter_by(name=user_name).first()
+        if not user:
+            return jsonify(success=False, error="User not found"), 404
+        
+        # 新しいplaysのレコードを作成
+        new_play = Play(
+            user_id=user.id, # user_idをセット
+            play_number=play_number, # play_numberをセット
+            score=score # scoreをセット
+        )
+        db.session.add(new_play)
+        db.session.commit() # 自動セットされるplay_idを取得するために一度commit
+
+        play_id = new_play.play_id # play_idを取得（AUTO_INCREMENT）
+
+        # fishnamesリストとfish_occurrencesをまとめてplayed_fishesに登録
+        for fish_name, quantity in zip(fishnames, fish_occurrences):
+            played_fish = Played_fishes(
+                play_id=play_id, # play_idを連携させる
+                fish_id=fish_dict[fish_name], # 魚の名前をidに変換して保存
+                quantity=quantity # 何匹とれたか（0匹でも0と表示）
+            )
+            db.session.add(played_fish)
+
+        db.session.commit()
+
+        return jsonify(success=True), 201 # 成功
+
+    except Exception as e:
+        db.session.rollback()
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
 # "http://localhost:5000" でFlaskサーバが立ち上がる
