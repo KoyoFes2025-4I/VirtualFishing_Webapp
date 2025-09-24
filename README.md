@@ -64,13 +64,21 @@ mysql -u root -p virtualfishing < virtualfishing.sql // データベースの復
 
 usersテーブルとfishlistsテーブルは以下のようになっているとする  
 
-usersテーブル（例）  fishlistsテーブル（例）  
-user_id | name  　　fish_id | fish_name  
---------+-----  　　--------+----------  
-1       | Alice  　　1       | tuna  
-2       | Bob  　　　2       | salmon  
-　　　　　　　　　　  3       | carp  
-　　　　　　　　　　　4       | shark  
+### users テーブル（ユーザー登録可能）
+
+| user_id | name  |
+|:-------:|:-----:|
+| 1       | Alice |
+| 2       | Bob   |
+
+### fishlists テーブル（固定リスト）
+
+| fish_id | fish_name |
+|:-------:|:---------:|
+| 1       | tuna      |
+| 2       | salmon    |
+| 3       | carp      |
+| 4       | shark     |
 
 1回目のPOSTで送るJSON  
 →Aliceが2回目のプレイで1500点獲得、["salmon", "tuna", "tuna", "salmon"]の魚を釣った  
