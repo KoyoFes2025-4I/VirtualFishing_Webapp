@@ -33,7 +33,7 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 ・play_id は users(user_id) を参照する外部キー  
 ・play_id は AUTO_INCREMENT で自動で連番が振られていく  
 
-### played_fished テーブル
+### played_fishes テーブル
 
 | play_fish_id | INT | PK, AUTO_INCREMENT | プレイアイテムID  
 | play_id | INT | NOT NULL, FK → plays(play_id) | どのプレイか  
