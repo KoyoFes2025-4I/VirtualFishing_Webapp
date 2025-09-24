@@ -59,3 +59,84 @@ fishlists: 存在する魚の固定リスト（各オブジェクトの名前、
 ```
 mysql -u root -p virtualfishing < virtualfishing.sql // データベースの復元
 ```
+
+## ゲーム終了時のUnityからのスコアなど記録処理の動作例
+
+usersテーブルとfishlistsテーブルは以下のようになっているとする  
+
+### users テーブル（ユーザー登録可能）
+
+| user_id | name  |
+|:-------:|:-----:|
+| 1       | Alice |
+| 2       | Bob   |
+
+### fishlists テーブル（固定リスト）
+
+| fish_id | fish_name |
+|:-------:|:---------:|
+| 1       | tuna      |
+| 2       | salmon    |
+| 3       | carp      |
+| 4       | shark     |
+
+1回目のPOSTで送るJSON  
+→Aliceが2回目のプレイで1500点獲得、["salmon", "tuna", "tuna", "salmon"]の魚を釣った  
+```
+{
+  "name": "Alice",
+  "play_number": 2,
+  "score": 1500,
+  "fish": ["salmon", "tuna", "tuna", "salmon"]
+}
+```
+
+実行後のデータベース  
+
+### plays テーブル
+
+| play_id | user_id | play_number | score |
+|:-------:|:-------:|:-----------:|------:|
+| 1       | 1       | 2           | 1500  |
+
+### played_fishes テーブル
+
+| play_fish_id | play_id | fish_id | quantity |
+|:------------:|:-------:|:-------:|---------:|
+| 1            | 1       | 1       | 2        |
+| 2            | 1       | 2       | 2        |
+| 3            | 1       | 3       | 0        |
+| 4            | 1       | 4       | 0        |
+
+2回目のPOSTで送るJSON  
+→Bobが1回目のプレイで2000点獲得、["salmon", "tuna", "carp", "salmon"]の魚を釣った
+```
+{ 
+  "name": "Bob", 
+  "play_number": 1, 
+  "score": 2000, 
+  "fish": ["salmon", "tuna", "carp", "salmon"] 
+}
+```
+
+実行後のデータベース
+
+### plays テーブル
+
+| play_id | user_id | play_number | score |
+|:-------:|:-------:|:-----------:|------:|
+| 1       | 1       | 2           | 1500  |
+| 2       | 2       | 1           | 2000  |
+
+### played_fishes テーブル
+
+| play_fish_id | play_id | fish_id | quantity |
+|:------------:|:-------:|:-------:|---------:|
+| 1            | 1       | 1       | 2        |
+| 2            | 1       | 2       | 2        |
+| 3            | 1       | 3       | 0        |
+| 4            | 1       | 4       | 0        |
+| 5            | 2       | 1       | 1        |
+| 6            | 2       | 2       | 2        |
+| 7            | 2       | 3       | 1        |
+| 8            | 2       | 4       | 0        |
