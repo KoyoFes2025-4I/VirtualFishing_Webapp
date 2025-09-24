@@ -55,7 +55,7 @@ class Fishlists(db.Model):
 
 # 新規ユーザーをusersテーブルに追加する
 # 'name'の値をJSONで受け取る（POSTメソッド）
-@app.route("/add", methods=['POST'])
+@app.route("/Add", methods=['POST'])
 def add_user():
     data = request.get_json()
     if not data or 'name' not in data:
@@ -71,6 +71,18 @@ def add_user():
     except Exception as e:
         db.session.rollback()
         return jsonify(success=False, error=str(e)) # 失敗
+    
+# Unity側から呼んで現在登録されている全てのユーザーをロードする
+@app.route("/LoadUsers", methods=['POST'])
+def load_user():
+    try:
+        # usersテーブルの全usernameを取得してリストにする
+        usernames = [user.name for user in User.query.all()]
+
+        # 成功したらJSONでそのリストをレスポンスする
+        return jsonify({"usernames": usernames})
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
 
 # "http://localhost:5000" でFlaskサーバが立ち上がる
 if __name__ == "__main__":
