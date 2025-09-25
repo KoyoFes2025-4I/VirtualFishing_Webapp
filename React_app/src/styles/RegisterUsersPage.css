@@ -1,0 +1,26 @@
+/* Bootstrapのフレームワークを用いたCSSファイル */
+
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vh;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.register-card {
+    width: 28rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.register-card .card-title {
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.register-card button {
+    font-size: 1.1rem;
+    padding: 0.6rem;
+}
