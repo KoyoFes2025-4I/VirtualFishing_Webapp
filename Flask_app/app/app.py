@@ -10,7 +10,7 @@ CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全�
 # ユーザー登録をUnity側へ反映 : MySQL => Flask => Unity
 # ゲーム終了後のユーザー情報登録 : Unity => Flask => MySQL
 # リアルタイムのランキング表示 : MySQL => Flask => React
-# PNG画像（写真）を貼付テクスチャ用にUnityへ送る : Flutter => Flask => Unity
+# PNG画像をスキャンして貼付テクスチャ用にUnityへ送る : Scanner => PC(Flask) => Unity
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://user:password@localhost/testdb'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -147,6 +147,28 @@ def Record_result():
 
     except Exception as e:
         db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+    
+# React側から呼んでユーザー名とスコアの1位～5位をリストで取得する
+@app.route("/GetRanking", methods=['POST'])
+def get_ranking():
+    try:
+        # (username, score) のタプルとしてtop_five_playsに結果を受け取る
+        top_five_plays = (
+            db.session.query(User.name, Play.score) # usersのnameとplaysのscoreを取り出す
+            .join(User, Play.user_id == User.id) # PlayとUserを結合
+            .order_by(Play.score.desc()) # scoreの大きい順に並び変え
+            .limit(5) # 上位5名を見る
+            .all()
+        )
+
+        # それぞれユーザー名とスコアのリストに分ける（順序同じ）
+        usernames = [row[0] for row in top_five_plays]
+        ranked_score = [row[1] for row in top_five_plays]
+
+        # 成功したらJSONで2つのリストをJSONでレスポンスする
+        return jsonify({"ranked_score": ranked_score}, {"usernames": usernames})
+    except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
 # "http://localhost:5000" でFlaskサーバが立ち上がる
