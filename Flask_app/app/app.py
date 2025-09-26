@@ -86,20 +86,20 @@ def load_user():
         return jsonify(success=False, error=str(e)), 500 # 失敗
     
 # ゲーム終了時にスコアなどのデータをデータベースに記録する
-# どのユーザーが、何回目のプレイで、スコアがいくつで、どの魚を何匹釣れたかのデータをJSONで受け取る
+# どのユーザーが、スコアがいくつで、どの魚を釣ったのか（匹数の情報含む）の各々のデータをJSONで受け取る
+# 何回目のプレイか（play_number）は、API側で自動でそのユーザーが何回目のプレイかを処理する
 @app.route("/RecordResult", methods=['POST'])
 def Record_result():
     data = request.get_json()  # JSONを取得
 
     # 必須フィールドの有無をチェック
-    required_fields = ["name", "play_number", "score", "fish"]
+    required_fields = ["name", "score", "fish"]
     missing = [f for f in required_fields if f not in data]
     if missing:
         return jsonify(success=False, error=f"Missing fields: {missing}"), 400
 
     # JSONの値を取り出す
     user_name = data["name"] # どのユーザーが
-    play_number = data["play_number"] # 何回目のプレイで
     score = data["score"] # スコアがいくつで
     fish_data = data["fish"] # 釣れた魚のリスト
 
@@ -120,6 +120,10 @@ def Record_result():
         user = User.query.filter_by(name=user_name).first()
         if not user:
             return jsonify(success=False, error="User not found"), 404
+        
+        # そのユーザーが何回目のプレイであるのかをデータベースを参照して計算する
+        # playsデータベースに既にそのユーザーIDが入っているレコードがいくつあるかを見る
+        play_number = Play.query.filter_by(user_id=user).count() + 1
         
         # 新しいplaysのレコードを作成
         new_play = Play(
