@@ -74,11 +74,11 @@ def add_user():
         return jsonify(success=False, error=str(e)) # 失敗
     
 # Unity側から呼んで現在登録されている全てのユーザーをロードする
-@app.route("/LoadUsers", methods=['POST'])
+@app.route("/LoadUsers", methods=['GET'])
 def load_user():
     try:
         # usersテーブルの全usernameを取得してリストにする
-        usernames = [User.username for user in User.query.all()]
+        usernames = [user.username for user in User.query.all()]
 
         # 成功したらJSONでそのリストをレスポンスする
         return jsonify({"usernames": usernames})
