@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, func
 
 app = Flask(__name__)
 CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全て許可
@@ -21,15 +21,15 @@ db = SQLAlchemy(app)
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True) # user_id
+    user_id = db.Column(db.Integer, primary_key=True) # user_id
     username = db.Column(db.String(80), nullable=False, unique=True) # username
     
 # playsテーブルのモデル
 class Play(db.Model):
     __tablename__ = 'plays'
 
-    id = db.Column(db.Integer, primary_key=True) # play_id
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # user_id
+    play_id = db.Column(db.Integer, primary_key=True) # play_id
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False) # user_id
     play_number = db.Column(db.Integer, nullable=False) # play_number
     score = db.Column(db.Integer, nullable=False) # score
 
@@ -42,16 +42,16 @@ class Play(db.Model):
 class Played_fishes(db.Model):
     __tablename__ = 'played_fishes'
 
-    id = db.Column(db.Integer, primary_key=True) # play_fish_id
-    play_id = db.Column(db.Integer, db.ForeignKey('plays.id'), nullable=False) # play_id
-    fish_id = db.Column(db.Integer, db.ForeignKey('fishlists.id'), nullable=False) # fish_id
+    play_fish_id = db.Column(db.Integer, primary_key=True) # play_fish_id
+    play_id = db.Column(db.Integer, db.ForeignKey('plays.play_id'), nullable=False) # play_id
+    fish_id = db.Column(db.Integer, db.ForeignKey('fishlists.fish_id'), nullable=False) # fish_id
     quantity = db.Column(db.Integer, default=1) # quantity
 
 # fishlistsテーブルのモデル
 class Fishlists(db.Model):
     __tablename__ = 'fishlists'
 
-    id = db.Column(db.Integer, primary_key=True) # fish_id
+    fish_id = db.Column(db.Integer, primary_key=True) # fish_id
     fish_name = db.Column(db.String(100), nullable=False, unique=True) # fish_name
 
 # 新規ユーザーをusersテーブルに追加する
@@ -78,7 +78,7 @@ def add_user():
 def load_user():
     try:
         # usersテーブルの全usernameを取得してリストにする
-        usernames = [user.name for user in User.query.all()]
+        usernames = [User.username for user in User.query.all()]
 
         # 成功したらJSONでそのリストをレスポンスする
         return jsonify({"usernames": usernames})
@@ -86,22 +86,22 @@ def load_user():
         return jsonify(success=False, error=str(e)), 500 # 失敗
     
 # ゲーム終了時にスコアなどのデータをデータベースに記録する
-# どのユーザーが、スコアがいくつで、どの魚を釣ったのか（匹数の情報含む）の各々のデータをJSONで受け取る
+# どのユーザーが、得点がいくつで、どの魚を釣ったのか（匹数の情報含む）の各々のデータをJSONで受け取る
 # 何回目のプレイか（play_number）は、API側で自動でそのユーザーが何回目のプレイかを処理する
 @app.route("/RecordResult", methods=['POST'])
 def Record_result():
     data = request.get_json()  # JSONを取得
 
     # 必須フィールドの有無をチェック
-    required_fields = ["name", "score", "fish"]
+    required_fields = ["name", "point", "fishedThingNames"]
     missing = [f for f in required_fields if f not in data]
     if missing:
         return jsonify(success=False, error=f"Missing fields: {missing}"), 400
 
     # JSONの値を取り出す
     user_name = data["name"] # どのユーザーが
-    score = data["score"] # スコアがいくつで
-    fish_data = data["fish"] # 釣れた魚のリスト
+    score = data["point"] # 得点がいくつで
+    fish_data = data["fishedThingNames"] # 釣れた魚のリスト
 
     fishnames = [] # 全ての魚オブジェクトの名前のリスト
     fish_occurrences = [] # 各魚のそのプレイでの出現回数のリスト（fishnamesと順序同じ）
@@ -117,17 +117,19 @@ def Record_result():
         fish_occurrences = [fish_data.count(fish) for fish in fishnames]
 
         # ユーザーIDを取得（user_nameに対応するidを取得）
-        user = User.query.filter_by(name=user_name).first()
+        user = User.query.filter_by(username=user_name).first()
         if not user:
             return jsonify(success=False, error="User not found"), 404
         
         # そのユーザーが何回目のプレイであるのかをデータベースを参照して計算する
-        # playsデータベースに既にそのユーザーIDが入っているレコードがいくつあるかを見る
-        play_number = Play.query.filter_by(user_id=user).count() + 1
+        # 現時点での一番大きいplay_numberを探してきてその+1の値とする
+        max_play_number = db.session.query(func.max(Play.play_number))\
+            .filter_by(user_id=user.user_id).scalar()
+        play_number = (max_play_number or 0) + 1
         
         # 新しいplaysのレコードを作成
         new_play = Play(
-            user_id=user.id, # user_idをセット
+            user_id=user.user_id, # user_idをセット
             play_number=play_number, # play_numberをセット
             score=score # scoreをセット
         )
@@ -159,8 +161,8 @@ def get_ranking():
     try:
         # (username, score) のタプルとしてtop_five_playsに結果を受け取る
         top_five_plays = (
-            db.session.query(User.name, Play.score) # usersのnameとplaysのscoreを取り出す
-            .join(User, Play.user_id == User.id) # PlayとUserを結合
+            db.session.query(User.username, Play.score) # usersのnameとplaysのscoreを取り出す
+            .join(User, Play.user_id == User.user_id) # PlayとUserを結合
             .order_by(Play.score.desc()) # scoreの大きい順に並び変え
             .limit(5) # 上位5名を見る
             .all()
@@ -171,7 +173,7 @@ def get_ranking():
         ranked_score = [row[1] for row in top_five_plays]
 
         # 成功したらJSONで2つのリストをJSONでレスポンスする
-        return jsonify({"ranked_score": ranked_score}, {"usernames": usernames})
+        return jsonify({"ranked_score": ranked_score, "usernames": usernames})
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
