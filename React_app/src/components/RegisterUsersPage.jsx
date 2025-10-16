@@ -1,26 +1,33 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 
 import "../styles/RegisterUsersPage.css";
 
 function UserRegister() {
     const [username, setUsername] = useState(""); // ユーザー名
+    const [loading, setLoading] = useState(false); // ローディング中フラグ
     const [message, setMessage] = useState(""); // 成功・失敗時のメッセージ表示用
     const [alertType, setAlertType] = useState("info"); // アラートの表示用
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if(loading) return; // ローディング中の重複送信を防ぐ
+
+        setLoading(true); // ローディング開始
+
         if (!username.trim()) {
             setAlertType("danger");
             setMessage("⚠️ ユーザー名を入力してください");
-            setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
+            setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
+            setLoading(false);
             return;
         }
 
         if (username.length > 50) {
             setAlertType("danger");
             setMessage("⚠️ ユーザー名が長すぎます");
-            setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
+            setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
+            setLoading(false);
             return;
         }
 
@@ -38,23 +45,27 @@ function UserRegister() {
                 // データベースへの登録成功
                 setAlertType("success");
                 setMessage("✅ 登録に成功しました！");
-                setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
-            } else if (data.error && data.error.includes("UNIQUE")) {
+                setLoading(false);
+                setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
+            } else if (data.error && data.error.includes("Duplicate")) {
                 // ユーザー名の重複エラー
                 setAlertType("danger");
-                setMessage("⚠️ このユーザ名は既に存在します。");
-                setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
+                setMessage("⚠️ このユーザ名は既に存在しています。");
+                setLoading(false);
+                setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
             } else {
                 // データベースへの追加エラー
                 setAlertType("danger");
-                setMessage("❌ エラー: " + data.error);
-                setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
+                setMessage("❌ ユーザーの追加に失敗しました");
+                setLoading(false);
+                setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
             }
             } catch (error) {
             // データベースとの接続エラー
             setAlertType("danger");
             setMessage("❌ データベース接続エラー");
-            setTimeout(() => setMessage(""), 3000); // 3秒間だけ表示
+            setLoading(false);
+            setTimeout(() => setMessage(""), 5000); // 5秒間だけ表示
         }
     };
 
@@ -74,17 +85,14 @@ function UserRegister() {
                     placeholder="ユーザー名を入力"
                 />
                 </div>
-                <button type="submit" className="btn btn-primary w-100">
-                登録
+                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                    {loading ? "処理中..." : "登録"}
                 </button>
             </form>
 
             {message && (
-                <div
-                className={`alert alert-${alertType} mt-3 text-center`}
-                role="alert"
-                >
-                {message}
+                <div className={`alert alert-${alertType} mt-3 text-center`} role="alert">
+                    {message}
                 </div>
             )}
             </div>
