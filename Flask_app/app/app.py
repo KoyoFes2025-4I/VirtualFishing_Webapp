@@ -12,7 +12,7 @@ CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全�
 # リアルタイムのランキング表示 : MySQL => Flask => React
 # PNG画像をスキャンして貼付テクスチャ用にUnityへ送る : Scanner => PC(Flask) => Unity
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://user:password@localhost/testdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:3710@localhost/virtualfishing'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -22,7 +22,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True) # user_id
-    name = db.Column(db.String(80), nullable=False, unique=True) # username
+    username = db.Column(db.String(80), nullable=False, unique=True) # username
     
 # playsテーブルのモデル
 class Play(db.Model):
@@ -65,7 +65,7 @@ def add_user():
     user_name = data['name'] # nameの値を受け取る
 
     try:
-        new_user = User(name=user_name) # usersのusernameに登録
+        new_user = User(username=user_name) # usersのusernameに登録
         db.session.add(new_user)
         db.session.commit()
         return jsonify(success=True) # 成功
