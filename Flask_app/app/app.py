@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint, func
+from collections import Counter
 
 app = Flask(__name__)
 CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全て許可
@@ -125,7 +126,7 @@ def restore_user():
 # どのユーザーが、得点がいくつで、どの魚を釣ったのか（匹数の情報含む）の各々のデータをJSONで受け取る
 # 何回目のプレイか（play_number）は、API側で自動でそのユーザーが何回目のプレイかを処理する
 @app.route("/RecordResult", methods=['POST'])
-def Record_result():
+def record_result():
     data = request.get_json()  # JSONを取得
 
     # 必須フィールドの有無をチェック
@@ -137,20 +138,22 @@ def Record_result():
     # JSONの値を取り出す
     user_name = data["name"] # どのユーザーが
     score = data["point"] # 得点がいくつで
-    fish_data = data["fishedThingNames"] # 釣れた魚のリスト
-
-    fishnames = [] # 全ての魚オブジェクトの名前のリスト
-    fish_occurrences = [] # 各魚のそのプレイでの出現回数のリスト（fishnamesと順序同じ）
+    fish_data = data["fishedThingNames"] # 釣れた魚のリスト（魚の重複あり）
     
     try:
         # Fishlistsテーブルからfish_name → fish_idの辞書リストを作っておく
         fish_dict = {f.fish_name: f.fish_id for f in Fishlists.query.all()}
 
-        # # fishlistsテーブルの全fish_nameを取得してfishnamesに入れる
-        fishnames = list(fish_dict.keys())
+        # fish_dataから各魚の出現回数をCounterでMapとしてまとめる
+        fish_counter = Counter(fish_data)
 
-        # fish_dataの中に各魚が何回出現していたのかをfish_occurrencesにリスト化（0匹も含む）
-        fish_occurrences = [fish_data.count(fish) for fish in fishnames]
+        # quantity > 0 の魚だけに絞って登録用リストを作成
+        # (fish_id, quantity)の組のリストができる（quantity = 0 を除く）
+        played_fishes_to_add = [
+            (fish_dict[fish_name], quantity)
+            for fish_name, quantity in fish_counter.items()
+            if fish_name in fish_dict and quantity > 0
+        ]
 
         # ユーザーIDを取得（user_nameに対応するidを取得）
         user = User.query.filter_by(username=user_name).first()
@@ -175,14 +178,13 @@ def Record_result():
         play_id = new_play.play_id # play_idを取得（AUTO_INCREMENT）
 
         # fishnamesリストとfish_occurrencesをまとめてplayed_fishesに登録
-        for fish_name, quantity in zip(fishnames, fish_occurrences):
+        for fish_name, quantity in played_fishes_to_add:
             played_fish = Played_fishes(
                 play_id=play_id, # play_idを連携させる
                 fish_id=fish_dict[fish_name], # 魚の名前をidに変換して保存
                 quantity=quantity # 何匹とれたか（0匹でも0と表示）
             )
-            db.session.add(played_fish)
-
+        db.session.add(played_fish)
         db.session.commit()
 
         return jsonify(success=True), 201 # 成功
@@ -194,21 +196,39 @@ def Record_result():
 @app.route("/GetRanking", methods=['POST'])
 def get_ranking():
     try:
-        # (username, score) のタプルとしてtop_five_playsに結果を受け取る
+        # スコアの値が高い順に上から5つ、それぞれどのplay_idで何回目のプレイで何点取ったかをPlaysから読み取る
+        # (play_id, username, score) のタプルをtop_five_playsに受け取る
         top_five_plays = (
-            db.session.query(User.username, Play.score) # usersのnameとplaysのscoreを取り出す
-            .join(User, Play.user_id == User.user_id) # PlayとUserを結合
+            db.session.query(Play.play_id, User.username, Play.score)
+            .join(User, Play.user_id == User.user_id)
             .order_by(Play.score.desc()) # scoreの大きい順に並び変え
             .limit(5) # 上位5名を見る
             .all()
         )
 
-        # それぞれユーザー名とスコアのリストに分ける（順序同じ）
-        usernames = [row[0] for row in top_five_plays]
-        ranked_score = [row[1] for row in top_five_plays]
+        ranking_data = []
 
-        # 成功したらJSONで2つのリストをJSONでレスポンスする
-        return jsonify({"ranked_score": ranked_score, "usernames": usernames})
+        # top_five_playsの各要素について、そのplay_idを使い何の魚を何匹釣ったかのリストをPlayed_fishesから読み取る
+        for play_id, username, score in top_five_plays:
+            fished_fishes = (
+                db.session.query(Fishlists.fish_name, Played_fishes.quantity)
+                .join(Played_fishes, Played_fishes.fish_id == Fishlists.fish_id)
+                .filter(Played_fishes.play_id == play_id, Played_fishes.quantity > 0)
+                .all()
+            )
+
+        # [(魚名, 数量)] → [{"fish": 魚名, "quantity": 数量}] に変える
+        fish_list = [{"fish": row[0], "quantity": row[1]} for row in fished_fishes]
+
+        # スコア上位5名が、誰が何点取って何の魚を何匹とったのかのリストを作る
+        ranking_data.append({
+            "username": username,
+            "score": score,
+            "fishes": fish_list
+        })
+
+        # JSONでranking_dataをレスポンスする
+        return jsonify({"ranking": ranking_data}), 200
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
