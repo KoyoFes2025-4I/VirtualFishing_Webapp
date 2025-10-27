@@ -8,6 +8,7 @@ CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全�
 
 # ユーザー登録 : React => Flask => MySQL
 # ユーザー情報をUnity側からロード : MySQL => Flask => Unity
+# 任意のユーザーのロード済みの状態をリセットする : Unity => Flask => MySQL
 # ゲーム終了後のユーザー情報登録 : Unity => Flask => MySQL
 # Unity側で新規テクスチャを登録した際に名前と製作者をfishlistsへ保存 : Unity => Flask => MySQL
 # リアルタイムのランキング表示（スコア、釣った魚、製作者） : MySQL => Flask => React
@@ -209,6 +210,17 @@ def get_ranking():
 
         # 成功したらJSONで2つのリストをJSONでレスポンスする
         return jsonify({"ranked_score": ranked_score, "usernames": usernames})
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+
+# Unity側から呼んで現在の総来場者数を取得する
+@app.route("/GetTurnouts", methods=['GET'])
+def get_turnouts():
+    try:
+        # usersテーブルの総カラム数（登録されているユーザー数）を取得する
+        total_users = db.session.query(User).count()
+
+        return jsonify({"turnouts": total_users})
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
