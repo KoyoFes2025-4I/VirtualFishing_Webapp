@@ -186,7 +186,6 @@ def Record_result():
         db.session.commit()
 
         return jsonify(success=True), 201 # 成功
-
     except Exception as e:
         db.session.rollback()
         return jsonify(success=False, error=str(e)), 500 # 失敗
@@ -221,6 +220,34 @@ def get_turnouts():
         total_users = db.session.query(User).count()
 
         return jsonify({"turnouts": total_users})
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+
+# Unity側から呼んでオブジェクト名と製作者名をfishlistsへ追加する
+@app.route("/SetFishObjects", methods=['POST'])
+def set_fish_objects():
+    data = request.get_json()  # JSONを取得
+
+    # 必須フィールドの有無をチェック
+    required_fields = ["fishName", "fishCreator"]
+    missing = [f for f in required_fields if f not in data]
+    if missing:
+        return jsonify(success=False, error=f"Missing fields: {missing}"), 400
+
+    # JSONの値を取り出す
+    fishName = data["fishName"] # オブジェクト名
+    fishCreator = data["fishCreator"] # 製作者名
+
+    try:
+        # Fishlistsテーブルに新しいレコードを追加する
+        new_fishData = Fishlists(
+            fish_name = fishName,
+            fish_creator = fishCreator
+        )
+        db.session.add(new_fishData)
+        db.session.commit()
+
+        return jsonify(success=True), 201 # 成功
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
