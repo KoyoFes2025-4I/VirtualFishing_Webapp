@@ -7,10 +7,11 @@ app = Flask(__name__)
 CORS(app)  # 他アプリからのこのAPIサーバへのリクエストを全て許可
 
 # ユーザー登録 : React => Flask => MySQL
-# ユーザー登録をUnity側へ反映 : MySQL => Flask => Unity
+# ユーザー情報をUnity側からロード : MySQL => Flask => Unity
 # ゲーム終了後のユーザー情報登録 : Unity => Flask => MySQL
-# リアルタイムのランキング表示 : MySQL => Flask => React
-# PNG画像をスキャンして貼付テクスチャ用にUnityへ送る : Scanner => PC(Flask) => Unity
+# Unity側で新規テクスチャを登録した際に名前と製作者をfishlistsへ保存 : Unity => Flask => MySQL
+# リアルタイムのランキング表示（スコア、釣った魚、製作者） : MySQL => Flask => React
+# 現在の来場者数表示用アプリでusersの総カラム数を取得する MySQL => Flask => Unity
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:3710@localhost/virtualfishing'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,6 +24,7 @@ class User(db.Model):
 
     user_id = db.Column(db.Integer, primary_key=True) # user_id
     username = db.Column(db.String(80), nullable=False, unique=True) # username
+    loaded = db.Column(db.Integer, nullable=False) # loaded
     
 # playsテーブルのモデル
 class Play(db.Model):
@@ -53,6 +55,7 @@ class Fishlists(db.Model):
 
     fish_id = db.Column(db.Integer, primary_key=True) # fish_id
     fish_name = db.Column(db.String(100), nullable=False, unique=True) # fish_name
+    fish_creator = db.Column(db.String(100), nullable=False, unique=True) # fish_creator
 
 # 新規ユーザーをusersテーブルに追加する
 # 'name'の値をJSONで受け取る
@@ -77,14 +80,46 @@ def add_user():
 @app.route("/LoadUsers", methods=['GET'])
 def load_user():
     try:
-        # usersテーブルの全usernameを取得してリストにする
-        usernames = [user.username for user in User.query.all()]
+        # 現状loaded = 0 の未ロードのユーザーをすべて取得
+        new_users = User.query.filter_by(loaded=0).all()
+
+        # new_usersの要素を全て取得してリストにする
+        usernames = [user.username for user in new_users]
+
+        # 該当ユーザーのloadedを1（ロード済み）に更新させる
+        if new_users:
+            for user in new_users:
+                user.loaded = 1
+            db.session.commit()
 
         # 成功したらJSONでそのリストをレスポンスする
         return jsonify({"usernames": usernames})
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
     
+# Unity側から呼んでGETで指定したユーザーのloadedを0（未ロード）に戻す
+# 2回目以降来た人のユーザー名をロードする用
+@app.route("/RestoreLoaded", methods=['GET'])
+def restore_user():
+    try:
+        # GETパラメータからusernameを取得
+        username = request.args.get('username')
+        if not username:
+            return jsonify(success=False, error="username parameter is required"), 400
+        
+        # 対象ユーザーを取得
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify(success=False, error=f"User '{username}' not found"), 404
+        
+        # loadedを0（未ロード）に戻す
+        user.loaded = 0
+        db.session.commit()
+
+        return jsonify(success=True, message=f"User '{username}' restored")
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+
 # ゲーム終了時にスコアなどのデータをデータベースに記録する
 # どのユーザーが、得点がいくつで、どの魚を釣ったのか（匹数の情報含む）の各々のデータをJSONで受け取る
 # 何回目のプレイか（play_number）は、API側で自動でそのユーザーが何回目のプレイかを処理する
