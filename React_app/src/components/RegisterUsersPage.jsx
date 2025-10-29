@@ -1,4 +1,5 @@
-import React, { use, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import "../styles/RegisterUsersPage.css";
 
@@ -7,6 +8,8 @@ function UserRegister() {
     const [loading, setLoading] = useState(false); // ローディング中フラグ
     const [message, setMessage] = useState(""); // 成功・失敗時のメッセージ表示用
     const [alertType, setAlertType] = useState("info"); // アラートの表示用
+
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,34 +72,45 @@ function UserRegister() {
         }
     };
 
+    const handlePlayButton = async (e) => {
+
+    }
+
     return (
         <div className="register-container">
-        <div className="card shadow-sm register-card">
-            <div className="card-body">
-            <h3 className="card-title text-center mb-4">ユーザー登録</h3>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                <label className="form-label">ユーザー名</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)} // ユーザー名をStateに入れる
-                    placeholder="ユーザー名を入力"
-                />
-                </div>
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                    {loading ? "処理中..." : "登録"}
-                </button>
-            </form>
-
-            {message && (
-                <div className={`alert alert-${alertType} mt-3 text-center`} role="alert">
-                    {message}
-                </div>
-            )}
+            <div className="logo-body">
+                <img src="virtualfishing.png" alt="ロゴ" width="300" height="300"></img>
             </div>
-        </div>
+            <div className="card shadow-sm register-card">
+                <div className="card-body">
+                    <h3 className="card-title text-center mb-4">ユーザー登録</h3>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-3">
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)} // ユーザー名をStateに入れる
+                                placeholder="ユーザー名を入力"
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                            {loading ? "処理中..." : "登録"}
+                        </button>
+                    </form>
+
+                    {message && (
+                        <div className={`alert alert-${alertType} mt-3 text-center`} role="alert">
+                            {message}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <div className="play-body">
+                <button className="play-button" onClick={() => navigate("/playing")}>
+                    暇つぶし？
+                </button>
+            </div>
         </div>
     );
 }
