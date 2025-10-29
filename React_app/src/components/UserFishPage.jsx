@@ -52,27 +52,30 @@ function UserFishPage({ user }) {
     }, [user]);
 
     return (
-        <div className="container ranking-container">
-            <div className="card shadow-sm ranking-card">
-                <div className="card-body text-center">
-                    <h3 className="card-title mb-3">
-                        🎣 {user.username} さんが釣り上げた魚
-                    </h3>
-                    <p className="text-muted">スコア：{user.score}</p>
-                    <ul className="list-group list-group-flush">
-                        {user.fishes.map((fish, i) => (
-                            <li key={i} className="list-group-item">
-                                {fish.fish}
-                                {creatorMap[fish.fish]
-                                    ? `（${creatorMap[fish.fish]}）`
-                                    : "（取得中...）"}
-                                × {fish.quantity}
-                            </li>
-                        ))}
-                    </ul>
+        <>
+            <div className="userfish-background"></div>
+            <div className="container ranking-container">
+                <div className="card shadow-sm ranking-card">
+                    <div className="card-body text-center">
+                        <h3 className="card-title mb-3">
+                            🎣 {user.username} さんが釣り上げた魚
+                        </h3>
+                        <p className="text-muted">スコア：{user.score}</p>
+                        <ul className="list-group list-group-flush">
+                            {user.fishes.map((fish, i) => (
+                                <li key={i} className="list-group-item">
+                                    {fish.fish}
+                                    {creatorMap[fish.fish]
+                                        ? `（${creatorMap[fish.fish]}）`
+                                        : "（取得中...）"}
+                                    × {fish.quantity}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 
