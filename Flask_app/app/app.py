@@ -223,13 +223,40 @@ def get_ranking():
 
         # スコア上位5名が、誰が何点取って何の魚を何匹とったのかのリストを作る
         ranking_data.append({
-            "username": username,
-            "score": score,
-            "fishes": fish_list
+            "username": username, # ユーザー名
+            "score": score, # スコア
+            "fishes": fish_list # [{"fish": 魚名, "quantity": 数量}]
         })
 
         # JSONでranking_dataをレスポンスする
         return jsonify({"ranking": ranking_data}), 200
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500 # 失敗
+    
+# React側から呼んで魚名に対応した製作者を取得する
+@app.route("/GetCreatorName", methods=['GET'])
+def get_creator():
+    try:
+        # GETパラメータから魚名を取得
+        fishName = request.args.get('fishName')
+        if not fishName:
+            return jsonify(success=False, error="fishName parameter is required"), 400
+        
+        # fishlistsテーブルから魚名に対応した製作者名を取得する
+        result = (
+            db.session.query(Fishlists.fish_creator)
+            .filter(Fishlists.fish_name == fishName)
+            .first()
+        )
+
+        # 該当データがなかった場合
+        if not result:
+            return jsonify(success=False, error="FishName not found"), 404
+
+        creatorName = result[0]
+
+        # JSONで製作者名をレスポンス
+        return jsonify(success=True, creator=creatorName), 200
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
