@@ -193,6 +193,7 @@ def record_result():
         return jsonify(success=False, error=str(e)), 500 # 失敗
     
 # React側から呼んでユーザー名とスコアの1位～5位をリストで取得する
+# さらにそれらのユーザーが実際に釣った魚の情報もレスポンスする
 @app.route("/GetRanking", methods=['POST'])
 def get_ranking():
     try:

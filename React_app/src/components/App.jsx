@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react
 import '../styles/App.css'
 
 import RegisterUsersPage from './RegisterUsersPage';
-import RankingPage from './RankingPage';
-import PlayingPage from "./Playing";
+import MainDisplay from './MainDisplayPage';
+import PlayingPage from "./PlayingPage";
 
 function Nav() {
   const location = useLocation();
@@ -28,7 +28,7 @@ function App() {
       <Routes>
         <Route path="/" element={<h1>Home</h1>} />
         <Route path="/register" element={<RegisterUsersPage />} />
-        <Route path="/ranking" element={<RankingPage />} />
+        <Route path="/ranking" element={<MainDisplay />} />
         <Route path="/playing" element={<PlayingPage />} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
