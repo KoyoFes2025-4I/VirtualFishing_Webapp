@@ -72,10 +72,6 @@ function UserRegister() {
         }
     };
 
-    const handlePlayButton = async (e) => {
-
-    }
-
     return (
         <div className="register-container">
             <div className="logo-body">

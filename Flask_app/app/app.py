@@ -26,7 +26,7 @@ class User(db.Model):
 
     user_id = db.Column(db.Integer, primary_key=True) # user_id
     username = db.Column(db.String(80), nullable=False, unique=True) # username
-    loaded = db.Column(db.Integer, nullable=False) # loaded
+    loaded = db.Column(db.Integer, nullable=False, default=0) # loaded
     
 # playsテーブルのモデル
 class Play(db.Model):
