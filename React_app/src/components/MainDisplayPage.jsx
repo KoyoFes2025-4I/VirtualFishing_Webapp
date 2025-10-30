@@ -13,12 +13,11 @@ function MainDisplay() {
         try {
             // FlaskのAPIサーバへリクエストを送ってレスポンスを取得
             const response = await fetch("http://localhost:5000/GetRanking", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: "GET",
             });
 
             const data = await response.json(); // JSONレスポンスを受け取る
-            const ranking_data = data.ranking_data || []; // ranking_dataを取得
+            const ranking_data = data.ranking || []; // ranking_dataを取得
             setRankingData(ranking_data);
         } catch (err) {
             console.error("取得失敗:", err);
@@ -46,7 +45,7 @@ function MainDisplay() {
             const randomIndex = Math.floor(Math.random() * rankingData.length);
             setSelectedUser(rankingData[randomIndex]);
         }
-    }, [isRankingView, rankingData]);
+    }, [isRankingView]);
 
     return (
         <div>

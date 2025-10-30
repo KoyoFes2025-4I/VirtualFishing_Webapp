@@ -150,7 +150,7 @@ def record_result():
         # quantity > 0 の魚だけに絞って登録用リストを作成
         # (fish_id, quantity)の組のリストができる（quantity = 0 を除く）
         played_fishes_to_add = [
-            (fish_dict[fish_name], quantity)
+            (fish_name, quantity)
             for fish_name, quantity in fish_counter.items()
             if fish_name in fish_dict and quantity > 0
         ]
@@ -182,9 +182,10 @@ def record_result():
             played_fish = Played_fishes(
                 play_id=play_id, # play_idを連携させる
                 fish_id=fish_dict[fish_name], # 魚の名前をidに変換して保存
-                quantity=quantity # 何匹とれたか（0匹でも0と表示）
+                quantity=quantity # 何匹とれたか（0匹は表示しない）
             )
-        db.session.add(played_fish)
+            db.session.add(played_fish)
+
         db.session.commit()
 
         return jsonify(success=True), 201 # 成功
@@ -194,7 +195,7 @@ def record_result():
     
 # React側から呼んでユーザー名とスコアの1位～5位をリストで取得する
 # さらにそれらのユーザーが実際に釣った魚の情報もレスポンスする
-@app.route("/GetRanking", methods=['POST'])
+@app.route("/GetRanking", methods=['GET'])
 def get_ranking():
     try:
         # スコアの値が高い順に上から5つ、それぞれどのplay_idで何回目のプレイで何点取ったかをPlaysから読み取る
@@ -218,15 +219,15 @@ def get_ranking():
                 .all()
             )
 
-        # [(魚名, 数量)] → [{"fish": 魚名, "quantity": 数量}] に変える
-        fish_list = [{"fish": row[0], "quantity": row[1]} for row in fished_fishes]
+            # [(魚名, 数量)] → [{"fish": 魚名, "quantity": 数量}] に変える
+            fish_list = [{"fish": row[0], "quantity": row[1]} for row in fished_fishes]
 
-        # スコア上位5名が、誰が何点取って何の魚を何匹とったのかのリストを作る
-        ranking_data.append({
-            "username": username, # ユーザー名
-            "score": score, # スコア
-            "fishes": fish_list # [{"fish": 魚名, "quantity": 数量}]
-        })
+            # スコア上位5名が、誰が何点取って何の魚を何匹とったのかのリストを作る
+            ranking_data.append({
+                "username": username, # ユーザー名
+                "score": score, # スコア
+                "fishes": fish_list # [{"fish": 魚名, "quantity": 数量}]
+            })
 
         # JSONでranking_dataをレスポンスする
         return jsonify({"ranking": ranking_data}), 200
@@ -256,7 +257,7 @@ def get_creator():
         creatorName = result[0]
 
         # JSONで製作者名をレスポンス
-        return jsonify(success=True, creator=creatorName), 200
+        return jsonify({"creator": creatorName}), 200
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 

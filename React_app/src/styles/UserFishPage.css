@@ -1,3 +1,4 @@
+/* 背景 */
 .userfish-background {
     position: fixed;
     top: 0;
@@ -9,4 +10,77 @@
     background-position: center;
     background-repeat: no-repeat;
     z-index: 0;
+}
+
+/* カード全体 */
+.ranking-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    margin-top: -8rem;
+}
+
+/* 個別カード */
+.ranking-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 700px;
+    padding: 30px;  
+    max-width: 500px;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+/* カード内部の余白 */
+.ranking-card .card-body {
+    padding: 20px;
+}
+
+/* タイトル */
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333333;
+}
+
+/* スコア */
+.text-muted {
+    font-size: 0.95rem;
+    color: #777777;
+    margin-bottom: 15px;
+}
+
+/* 魚リスト */
+.list-group {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+    color: #555555;
+    transition: background-color 0.2s;
+}
+
+/* 魚名と製作者名 */
+.list-group-item span.fish-name {
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: #333333;
+}
+
+.list-group-item span.creator {
+    font-size: 1.2rem;
+    color: #555555;
+    margin-left: 5px;
 }
