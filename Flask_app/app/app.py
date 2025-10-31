@@ -261,17 +261,6 @@ def get_creator():
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500 # 失敗
 
-# Unity側から呼んで現在の総来場者数を取得する
-@app.route("/GetTurnouts", methods=['GET'])
-def get_turnouts():
-    try:
-        # usersテーブルの総カラム数（登録されているユーザー数）を取得する
-        total_users = db.session.query(User).count()
-
-        return jsonify({"turnouts": total_users})
-    except Exception as e:
-        return jsonify(success=False, error=str(e)), 500 # 失敗
-
 # Unity側から呼んでオブジェクト名と製作者名をfishlistsへ追加する
 @app.route("/SetFishObjects", methods=['POST'])
 def set_fish_objects():

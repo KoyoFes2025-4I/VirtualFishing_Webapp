@@ -5,6 +5,10 @@
     min-height: 100dvh;
     margin: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
     background-color: #f8f9fa;
 }
@@ -47,8 +51,8 @@
 .register-card {
     position: relative;
     z-index: 1;
-    margin-top: 3rem;
-    width: 28rem;
+    margin-top: 1rem;
+    width: 90%;
     border-radius: 0.75rem;
     overflow: hidden;
     background-color: white;
