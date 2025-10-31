@@ -12,7 +12,7 @@ function MainDisplay() {
     const fetchRanking = async () => {
         try {
             // FlaskのAPIサーバへリクエストを送ってレスポンスを取得
-            const response = await fetch("http://localhost:5000/GetRanking", {
+            const response = await fetch("https://koyofes2025.duckdns.org/GetRanking", {
                 method: "GET",
             });
 

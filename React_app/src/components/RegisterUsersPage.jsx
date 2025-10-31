@@ -38,7 +38,7 @@ function UserRegister() {
         try {
             // FlaskのAPIサーバへPOSTリクエストを送ってレスポンスを取得
             // ユーザー新規登録のAPI
-            const response = await fetch("http://localhost:5000/Add", {
+            const response = await fetch("https://koyofes2025.duckdns.org/Add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }, // JSONファイルをPOSTで送る
                 body: JSON.stringify({ name: username }), // FlaskのAPIサーバのフィールド名に合わせる
@@ -92,7 +92,7 @@ function UserRegister() {
         try {
             // FlaskのAPIサーバへGETパラメータを送ってレスポンスを取得
             // 2回目以降来た人用のloadedフラグを0に戻すAPI
-            const response = await fetch(`http://localhost:5000/RestoreLoaded?username=${encodeURIComponent(username)}`, {
+            const response = await fetch(`https://koyofes2025.duckdns.org/RestoreLoaded?username=${encodeURIComponent(username)}`, {
                 method: "GET",
             });
 
@@ -122,7 +122,7 @@ function UserRegister() {
     return (
         <div className="register-container">
             <div className="logo-body">
-                <img src="virtualfishing.png" alt="ロゴ" width="300" height="300"></img>
+                <img src="/virtualfishing.png" alt="ロゴ" width="300" height="300"></img>
             </div>
             <div className="card shadow-sm register-card">
                 <div className="card-body">

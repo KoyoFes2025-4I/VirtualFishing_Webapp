@@ -16,7 +16,7 @@ function UserFishPage({ user }) {
                 const fishName = typeof fish === "string" ? fish : fish.fish;
                 try {
                     // FlaskのAPIサーバへGETリクエストを送ってレスポンスを取得
-                    const response = await fetch(`http://localhost:5000/GetCreatorName?fishName=${encodeURIComponent(fish.fish)}`);
+                    const response = await fetch(`https://koyofes2025.duckdns.org/GetCreatorName?fishName=${encodeURIComponent(fish.fish)}`);
                     const data = await response.json();
                     newMap[fishName] = data.creator || null;
                 } catch (err) {
