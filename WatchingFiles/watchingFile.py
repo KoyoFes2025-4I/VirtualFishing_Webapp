@@ -8,8 +8,8 @@ from watchdog.events import FileSystemEventHandler
 # pip install watchdog
 
 # 設定
-WATCH_FOLDER = r"C:\Users\ojita\Documents\Unity_applications\VirtualFishing_Webapp\test1" # 監視するフォルダ
-DEST_FOLDER = r"C:\Users\ojita\Documents\Unity_applications\VirtualFishing_Webapp\test2" # 移動先フォルダ
+WATCH_FOLDER = r"test1" # 監視するフォルダ
+DEST_FOLDER = r"test2" # 移動先フォルダ
 
 # 表示させるウィンドウ
 class RenameDialog(Tk):
